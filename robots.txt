@@ -1,4 +1,4 @@
 ﻿User-agent: *
 Allow: /
 
-Sitemap: https://samola.studio/sitemap.xml
+Sitemap: https://pavelsamoylenko82-ops.github.io/samola-site/sitemap.xml
