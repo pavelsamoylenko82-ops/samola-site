@@ -1,6 +1,7 @@
-﻿'use strict';
+'use strict';
 
 (function () {
+  var LEAD_API_URL = 'https://swimming-designer-engine-afterwards.trycloudflare.com/api/lead';
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   var finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
   var header = document.getElementById('site-header');
@@ -281,21 +282,53 @@
 
       generatedMessage = buildMessage();
       var telegramUrl = 'https://t.me/samola13?text=' + encodeURIComponent(generatedMessage);
+      var payload = {
+        name: nameField.value.trim(),
+        contact: contactField.value.trim(),
+        service: serviceField.value,
+        source: 'samola-site',
+        page: window.location.href
+      };
 
       if (telegramLink) {
         telegramLink.href = telegramUrl;
       }
 
       if (fallbackBox) {
-        fallbackBox.hidden = false;
+        fallbackBox.hidden = true;
       }
 
       if (statusBox) {
         statusBox.hidden = false;
-        statusBox.textContent = 'Заявка сформирована. Откройте Telegram и отправьте готовое сообщение. Если окно не открылось, используйте кнопку ниже.';
+        statusBox.textContent = 'Отправляем заявку...';
       }
 
-      window.open(telegramUrl, '_blank', 'noopener,noreferrer');
+      fetch(LEAD_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      }).then(function (response) {
+        if (!response.ok) {
+          throw new Error('HTTP ' + response.status);
+        }
+        return response.json();
+      }).then(function () {
+        leadForm.reset();
+        if (statusBox) {
+          statusBox.textContent = 'Заявка отправлена. Свяжемся с вами в рабочее время.';
+        }
+      }).catch(function () {
+        if (fallbackBox) {
+          fallbackBox.hidden = false;
+        }
+        if (statusBox) {
+          statusBox.textContent = 'Не удалось отправить заявку автоматически. Откройте Telegram и отправьте готовое сообщение.';
+        }
+        window.open(telegramUrl, '_blank', 'noopener,noreferrer');
+      });
     });
 
     [nameField, contactField, serviceField].forEach(function (field) {
